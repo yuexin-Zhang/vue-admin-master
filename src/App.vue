@@ -92,6 +92,19 @@ body {
 
 .el-table {
 	margin-left: 10px;
+	li {
+		position: relative;
+		.icon-delete {
+			display: inline-block;
+			margin-left: 5px;
+			margin-top: 4px;
+			position: absolute;
+			background: url(../src/assets/icon-delete.png) no-repeat 0 0 ;
+			width: 16px;
+			height: 16px;
+			cursor: pointer;
+		}
+	}
 }
 
 .export-btn {
@@ -105,4 +118,5 @@ body {
 	cursor: pointer;
 	text-decoration: none;
 }
+
 </style>
