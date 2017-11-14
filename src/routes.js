@@ -5,6 +5,7 @@ import Main from './views/Main.vue'
 import Table from './views/nav1/Table.vue'
 import Menu from './views/nav1/Menu.vue'
 import Page4 from './views/nav2/Page4.vue'
+import Article from './views/nav3/Article.vue'
 
 let routes = [
     {
@@ -36,6 +37,15 @@ let routes = [
         iconCls: 'el-icon-menu',
         children: [
             { path: '/page4', component: Page4, name: '员工就餐汇总' }
+        ]
+    },
+    {
+        path: '/',
+        component: Home,
+        name: '文章管理',
+        iconCls: 'el-icon-menu',
+        children: [
+            { path: '/Article', component: Article, name: '文章管理' }
         ]
     },
     {
