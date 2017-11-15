@@ -4,10 +4,10 @@
         <el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
             <el-form :inline="true">
                 <el-form-item>
-                    <el-input v-model="checkMenuName" placeholder="文章标题"></el-input>
+                    <el-input v-model="checkTitle" placeholder="文章标题"></el-input>
                 </el-form-item>
                 <el-form-item>
-                    <el-button type="primary" v-on:click="checkMenu">查询</el-button>
+                    <el-button type="primary" v-on:click="checkArticleTitle">查询</el-button>
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" @click="handleAdd">新增文章</el-button>
@@ -16,12 +16,12 @@
         </el-col>
 
         <!--列表-->
-        <el-table ref="multipleTable" :data="menuData" highlight-current-row v-loading="listLoading" @selection-change="selsChange" style="width: 100%;">
+        <el-table ref="multipleTable" :data="articleData" highlight-current-row v-loading="listLoading" style="width: 100%;">
             <el-table-column prop="index" label="编号" width="80">
             </el-table-column>
-            <el-table-column prop="title" label="标题" width="180">
+            <el-table-column prop="Title" label="标题" width="180">
             </el-table-column>
-            <el-table-column prop="content" label="内容">
+            <el-table-column prop="Content" label="内容">
             </el-table-column>
             <el-table-column label="图片">
                 <template slot-scope="scope">
@@ -30,7 +30,7 @@
             </el-table-column>
             <el-table-column label="操作" width="150">
                 <template slot-scope="scope">
-                    <el-button type="danger" size="small" @click="handleDel(scope.$index, scope.row)">删除</el-button>
+                    <el-button type="danger" size="small" @click="handleDel(scope.row.ResourceId)">删除</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -48,7 +48,7 @@
                     <el-input v-model="title" auto-complete="off"></el-input>
                 </el-form-item>
                 <el-form-item label="文章内容" prop="name" placeholder="请输入文章标题">
-                    <el-input type="textarea" :rows="2" placeholder="请输入文章标题" v-model="content" auto-complete="off" maxlength="200"></el-input>
+                    <el-input type="textarea" :rows="2" placeholder="请输入文章标题" v-model="content" auto-complete="off"></el-input>
                 </el-form-item>
                 <el-form-item label="上传图片">
                     <el-upload
@@ -68,7 +68,7 @@
             </el-form>
             <div slot="footer" class="dialog-footer">
                 <el-button @click.native="addFormVisible = false">取消</el-button>
-                <el-button type="success" @click.native="submitUpload" :loading="addLoading">提交</el-button>
+                <el-button type="success" @click.native="submitArticle" :loading="addLoading">提交</el-button>
             </div>
         </el-dialog>
     </section>
@@ -87,6 +87,12 @@
                 filters: {
                     MenuName: ''
                 },
+                title: '',
+                content: '',
+                articleData: [],
+                originData: [],
+                checkTitle: '',
+
                 allMenuData: [],
                 menuData: [],
                 checkMenuData: [],
@@ -154,13 +160,7 @@
                 }
                 this.lastPage = page
             },
-            //获取全部菜品
-            getAllMenuData () {
-                this.loadXMLDoc('http://116.62.66.130:80/canteen/getAllDish.php', 'getAllDish=1','allMenuData')
-                this.allMenuData.forEach((item, index) => {
-                    item.index = index + 1
-                })
-            },
+
             //获取某页菜品列表
             getMenus(page) {
                 let vm = this
@@ -170,18 +170,20 @@
                     this.menuData = this.allMenuData
                 }
             },
-            checkMenu() {
-                this.checkMenuData = []
-                let key = this.checkMenuName
+            checkArticleTitle() {
+                this.checkArticleData = []
+                this.articleData = []
+                let key = this.checkTitle
+                console.log(key)
                 if (key== '') {
-                    this.getMenus(1)
+                    this.getArticleData()
                 } else {
-                    for (var menu of this.allMenuData) {
-                        if (menu.MenuName.indexOf(key) > -1) {
-                            this.checkMenuData.push(menu)
+                    for (var article of this.originData) {
+                        if (article.Title.indexOf(key) > -1) {
+                            this.checkArticleData.push(article)
                         }
                     }
-                    this.menuData = this.checkMenuData
+                    this.articleData = this.checkArticleData
                 } 
             },
             handleRemove(file, fileList) {
@@ -201,16 +203,14 @@
                 this.handleCurrentChange(Math.ceil(this.allMenuData.length / this.pageSize))
             },
             //删除
-            handleDel: function (index, row) {
-                let vm = this
+            handleDel: function (index,row) {
                 this.$confirm('确认删除该记录吗?', '提示', {
                     type: 'warning'
                 }).then(() => {
-                    let param = qs.stringify({'MenuId': row.MenuId})
-                    this.loadXMLDoc('http://116.62.66.130/canteen/deleteDish.php', param, '')
-                    this.getAllMenuData()
-                    this.getMenus(this.currentPage)
-                    this.checkMenuName = ''
+                    let param = qs.stringify({'ResourceId': index})
+                    this.loadXMLDoc('http://116.62.66.130/canteen/deleteOneResource.php', param, '')
+                    this.getArticleData()
+                    this.checkArticleTitle = ''
                     this.$message({
                         message: '删除成功',
                         type: 'success'
@@ -225,22 +225,48 @@
                 this.addFormVisible = true;
                 this.newMenuName = this.checkMenuName
             },
-            submitUpload() {
+            submitArticle() {
                 let file = document.getElementsByClassName('el-upload__input')[0].files[0]
-                if (this.newMenuName !== '' && !!file) {
+                if (this.title !== '' && this.content !== '') {
                     this.addLoading = true;
-                    let param = new FormData(); //创建form对象
-                    param.append('MenuName',this.newMenuName);//添加form表单中其他数据
-                    param.append('file',file);//通过append向form对象添加数据
+                    // let param = new FormData(); //创建form对象
+                    // param.append('MenuName',this.newMenuName);//添加form表单中其他数据
+                    // param.append('file',file);//通过append向form对象添加数据
                     // this.form.file = param.get('file')
-                    this.form.MenuName = param.get('MenuName')
-                    this.checkMenuName = ''
+                    // this.form.MenuName = param.get('MenuName')
+                    // this.checkMenuName = ''
                     // console.log(param.get('file')); //FormData私有类对象，访问不到，可以通过get判断值是否传进去
-                    this.$refs.upload.submit();
-                } else {
-                    if (this.newMenuName == '') {
+                    // this.$refs.upload.submit();
+
+                    let param = {
+                        "Title": this.title,
+                        "Content": this.content,
+                        "Type": 2,
+                        "EmployeeId": 1
+                    }
+                    this.listLoading = false
+                    this.loadXMLDoc('http://116.62.66.130/canteen/addResource.php', qs.stringify(param), '')
+                    if (!this.listLoading) {
                         this.$message({
-                            message: '菜名不能为空',
+                            message: '添加文章成功',
+                            type: 'success'
+                        });
+                        this.title = ''
+                        this.content = ''
+                        this.dialogFormVisible = false
+                        this.getArticleData()
+                    } else {
+                        //
+                    }
+                } else {
+                    if (this.title == '') {
+                        this.$message({
+                            message: '文章标题不能为空',
+                            type: 'warning'
+                        });
+                    } else if (this.content == '') {
+                        this.$message({
+                            message: '文章内容不能为空',
                             type: 'warning'
                         });
                     } else if (file == undefined) {
@@ -251,70 +277,15 @@
                     }
                 }
              },
-            selsChange: function (sels) {
-                this.sels = sels;
-            },
-            addMenu() {
-                let vm = this
-                this.selectedMenus = []
-                this.allSels[this.currentPage] = this.sels
-                let obj = this.allSels
-                Object.keys(obj).forEach(function(key){
-                    for (var menu of obj[key]) {
-                        vm.selectedMenus.push(menu)
-                    }
-                })
-                let menuIds = ''
-                for (var menu of this.selectedMenus) {
-                    menuIds += menu.MenuId + ','
+            getArticleData () {
+                this.articleData = []
+                this.loadXMLDoc('http://116.62.66.130/canteen/showAllResource.php', qs.stringify({}), 'originData')
+                for (let [index,val] of this.originData.entries()){
+                    val.index = index + 1
+                    this.articleData.push(val)
                 }
-                if (this.date !== '' && this.time!== '') {
-                    let time = ''
-                    switch(this.time){
-                        case '早餐':
-                            time = 1
-                            break
-                        case '中餐':
-                            time = 2
-                            break
-                        case '晚餐':
-                            time = 3
-                            break
-                    }
-                    let date = util.formatDate.format(new Date(this.date), "yyyy-MM-dd")
-                    let param = {
-                        "EatingDate": date,
-                        "MenuId": menuIds.substring(0,menuIds.length-1),
-                        "EatingTime": time
-                    }
-                    this.listLoading = false
-                    this.loadXMLDoc('http://116.62.66.130/canteen/setEverydayMenu.php', qs.stringify(param), '')
-                    if (!this.listLoading) {
-                        this.$message({
-                            message: '添加菜单成功',
-                            type: 'success'
-                        });
-                        this.date = ''
-                        this.time = ''
-                        this.$refs.multipleTable.clearSelection();
-                        this.dialogFormVisible = false
-                        this.selectedMenus = []
-                    } else {
-                        if (this.date == '') {
-                            this.$message({
-                                message: '请选择日期',
-                                type: 'warning'
-                            });
-                        } else {
-                            this.$message({
-                                message: '请选择时间',
-                                type: 'warning'
-                            });
-                        }
-                    }
-                }
+                console.log(this.articleData)
             },
-
             loadXMLDoc(url, param, data) {
                 var xmlhttp;
                 let vm = this
@@ -342,14 +313,14 @@
             }
         },
         created() {
-            this.lastPage = 1
-            this.getAllMenuData()
-            this.getMenus(1)
+            this.getArticleData()
         },
         watch:{
-            checkMenuName(curVal,oldVal) {
+            checkTitle(curVal,oldVal) {
                 if (curVal == '') {
-                    this.getMenus(1)
+                    this.checkArticleTitle()
+                } else {
+                    this.checkArticleTitle()
                 }
             }
         }

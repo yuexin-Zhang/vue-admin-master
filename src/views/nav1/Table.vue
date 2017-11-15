@@ -373,6 +373,8 @@
 	      	checkMenuName(curVal,oldVal) {
 		        if (curVal == '') {
 		          	this.getMenus(1)
+		      	} else {
+		      		this.checkMenu()
 		      	}
 	    	}
 	    }
