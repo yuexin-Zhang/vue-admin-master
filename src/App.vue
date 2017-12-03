@@ -118,5 +118,10 @@ body {
 	cursor: pointer;
 	text-decoration: none;
 }
-
+.importWeekDialog {
+	width: 1000px;
+	.el-date-editor {
+		margin: 0px;
+	}
+}
 </style>

@@ -6,6 +6,23 @@
       format="yyyy 第 WW 周"
       placeholder="选择周">
     </el-date-picker>
+    <el-button type="primary" @click="dialogFormVisible = true">导入周菜单</el-button>
+    <el-dialog class="importWeekDialog" title="请选择要导入的是哪周" :visible.sync="dialogFormVisible">
+      <el-form>
+         <el-form-item label="日期">
+            <el-date-picker
+              v-model="week2"
+              type="week"
+              format="yyyy 第 WW 周"
+              placeholder="选择周">
+            </el-date-picker>
+          </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button type="primary" @click="addWeek">确 定</el-button>
+      </div>
+    </el-dialog>
     <el-table :data="tableData" stripe border style="width: 100%">
       <el-table-column
         prop="time"
@@ -15,7 +32,7 @@
       <el-table-column prop="Monday" :label="'周一' + '(' + date + ')'">
           <template slot-scope="scope">
             <ul style="margin-left: -36px;">
-              <li v-for="(menu, index) in scope.row.Monday">{{menu.MenuName}}<div @click="deleteWeekMenu(date,scope.row.time,menu)"class="icon-delete"></div></li>
+              <li v-for="(menu, index) in scope.row.Monday">{{menu.MenuName}}<div @click="deleteWeekMenu(date,scope.row.time,menu)" class="icon-delete"></div></li>
             </ul>
           </template>
       </el-table-column>
@@ -75,7 +92,10 @@
         date: '',
         time: '',
         week: '',
+        week2: '',
         tableData: [],
+        dialogFormVisible: false,
+        listLoading: false,
         pickerOptions0: {
           disabledDate(time) {
             return time.getTime() < Date.now() - 8.64e7;
@@ -135,7 +155,7 @@
           dd.setDate(dd.getDate()+AddDayCount);//获取AddDayCount天后的日期 
           var y = dd.getFullYear(); 
           var m = dd.getMonth()+1;//获取当前月份的日期 
-          var d = dd.getDate(); 
+          var d = JSON.stringify(dd.getDate()).length > 1 ? dd.getDate() : '0' + dd.getDate(); 
           return y+"-"+m+"-"+d; 
       },
       getFirstDayOfWeek (date) { 
@@ -158,9 +178,6 @@
             eatingTime = 4
             break;
         }
-        console.log('date', date)
-        console.log('eatingTime',eatingTime)
-        console.log('MenuId', menu.MenuId)
         let vm = this
         this.$confirm('确认将此菜从该日菜单删除吗?', '提示', {
           type: 'warning'
@@ -175,6 +192,18 @@
         }).catch(() => {
 
         });
+      },
+      addWeek () {
+        this.listLoading = true
+        let param = qs.stringify({
+          HistoryDate: util.formatDate.format(new Date(this.week), "yyyy-MM-dd"),
+          FutureDate: util.formatDate.format(new Date(this.week2), "yyyy-MM-dd")
+        })
+        this.loadXMLDoc('http://116.62.66.130/canteen/insertHistoryMenuToFuture.php', param, '')
+        if (this.listLoading == false) {
+          this.dialogFormVisible = false
+          this.week2 = ''
+        }
       },
       loadXMLDoc(url, param, data) {
         var xmlhttp;

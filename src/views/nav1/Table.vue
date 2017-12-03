@@ -49,7 +49,8 @@
 	            v-model="date"
 	            type="date"
 	            placeholder="选择日期"
-	            :picker-options="pickerOptions0">
+	            :picker-options="pickerOptions0"
+	            style="margin:0;">
 	          </el-date-picker>
 	        </el-form-item>
 		    <el-form-item label="时间">
@@ -149,7 +150,7 @@
 		          }
 		        },
 		        pageSize: 5,
-		        form:{}
+		        form: {}
 			}
 		},
 		methods: {
@@ -311,8 +312,8 @@
 						"EatingTime": time
 					}
 					this.listLoading = false
-					this.loadXMLDoc('http://116.62.66.130/canteen/setEverydayMenu.php', qs.stringify(param), '')
-					if (!this.listLoading) {
+					this.loadXMLDoc('http://116.62.66.130/canteen/setEverydayMenu.php', qs.stringify(param), 'addMenuMsg')
+					if (!this.listLoading && this.addMenuMsg != 'can only have 5 dishes') {
 						this.$message({
 							message: '添加菜单成功',
 							type: 'success'
@@ -323,12 +324,19 @@
 						this.dialogFormVisible = false
 						this.selectedMenus = []
 					} else {
+						if (this.addMenuMsg == 'can only have 5 dishes') {
+							this.$message({
+								message: '该时间段最多只能有5道菜',
+								type: 'warning'
+							});
+						}
 						if (this.date == '') {
 							this.$message({
 								message: '请选择日期',
 								type: 'warning'
 							});
-						} else {
+						} 
+						if (this.time == '') {
 							this.$message({
 								message: '请选择时间',
 								type: 'warning'
