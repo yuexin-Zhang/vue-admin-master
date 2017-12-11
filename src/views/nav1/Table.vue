@@ -78,7 +78,7 @@
 					<el-upload
 					  class="upload-demo"
 					  ref="upload"
-					  action="http://116.62.66.130:80/canteen/addNewDish.php"
+					  :action="'http://'+ip + '/canteen/addNewDish.php'"
 					  :on-preview="handlePreview"
 					  :on-remove="handleRemove"
 					  :auto-upload="false"
@@ -108,6 +108,7 @@
 	export default {
 		data() {
 			return {
+				ip: util.ip,
 				filters: {
 					MenuName: ''
 				},
@@ -180,7 +181,7 @@
 			},
 			//获取全部菜品
 			getAllMenuData () {
-				this.loadXMLDoc('http://116.62.66.130:80/canteen/getAllDish.php', 'getAllDish=1','allMenuData')
+				this.loadXMLDoc('http://' + this.ip + ':80/canteen/getAllDish.php', 'getAllDish=1','allMenuData')
 				this.allMenuData.forEach((item, index) => {
 					item.index = index + 1
 				})
@@ -231,7 +232,7 @@
 					type: 'warning'
 				}).then(() => {
 					let param = qs.stringify({'MenuId': row.MenuId})
-					this.loadXMLDoc('http://116.62.66.130/canteen/deleteDish.php', param, '')
+					this.loadXMLDoc('http://' + this.ip + '/canteen/deleteDish.php', param, '')
 					this.getAllMenuData()
 					this.getMenus(this.currentPage)
 					this.checkMenuName = ''
@@ -312,7 +313,7 @@
 						"EatingTime": time
 					}
 					this.listLoading = false
-					this.loadXMLDoc('http://116.62.66.130/canteen/setEverydayMenu.php', qs.stringify(param), 'addMenuMsg')
+					this.loadXMLDoc('http://' + this.ip + '/canteen/setEverydayMenu.php', qs.stringify(param), 'addMenuMsg')
 					if (!this.listLoading && this.addMenuMsg != 'can only have 5 dishes') {
 						this.$message({
 							message: '添加菜单成功',

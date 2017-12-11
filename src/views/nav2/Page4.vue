@@ -48,6 +48,7 @@
   export default {
     data() {
       return {
+        ip:util.ip,
         listLoading: false,
         allUserData:[],
         userData: [],
@@ -87,7 +88,7 @@
       getUserMealData(user) {
         this.selectedUser = user
         let param = {'EmployeeId':user.EmployeeId}
-        this.loadXMLDoc('http://116.62.66.130/canteen/reportForOne.php',qs.stringify(param), 'userMealData')
+        this.loadXMLDoc('http://' + this.ip + '/canteen/reportForOne.php',qs.stringify(param), 'userMealData')
       },
       checkUserMealData(checkUserName) {
         this.checkUserData = []
@@ -123,7 +124,7 @@
     },
     created() {
       this.currYear = new Date().getFullYear()
-      this.loadXMLDoc('http://116.62.66.130/canteen/queryAllEmployee.php', '', 'allUserData')
+      this.loadXMLDoc('http://' + this.ip + '/canteen/queryAllEmployee.php', '', 'allUserData')
       this.userData = this.allUserData
       this.getUserMealData(this.allUserData[0]);
     },

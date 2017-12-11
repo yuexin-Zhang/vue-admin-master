@@ -4,7 +4,7 @@ let base = '';
 
 export const requestLogin = params => { return axios.post(`${base}/login`, params).then(res => res.data); };
 
-export const getUserList = params => { return axios.get("http://116.62.66.130:80/canteen/queryAllEmployee.php", { params: params }); };
+export const getUserList = params => { return axios.get("http://' + ip + '/canteen/queryAllEmployee.php", { params: params }); };
 
 export const getUserListPage = params => { return axios.get(`${base}/user/listpage`, { params: params }); };
 

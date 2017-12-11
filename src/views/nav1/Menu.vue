@@ -7,6 +7,8 @@
       placeholder="选择周">
     </el-date-picker>
     <el-button type="primary" @click="dialogFormVisible = true">导入周菜单</el-button>
+    <el-button type="primary" @click="dialogFormVisible2 = true">清空周菜单</el-button>
+
     <el-dialog class="importWeekDialog" title="请选择要导入的是哪周" :visible.sync="dialogFormVisible">
       <el-form>
          <el-form-item label="日期">
@@ -23,6 +25,24 @@
         <el-button type="primary" @click="addWeek">确 定</el-button>
       </div>
     </el-dialog>
+
+    <el-dialog class="importWeekDialog" title="请选择要清空的是哪周" :visible.sync="dialogFormVisible2">
+      <el-form>
+         <el-form-item label="日期">
+            <el-date-picker
+              v-model="week3"
+              type="week"
+              format="yyyy 第 WW 周"
+              placeholder="选择周">
+            </el-date-picker>
+          </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible2 = false">取 消</el-button>
+        <el-button type="primary" @click="deleteWeek">确 定</el-button>
+      </div>
+    </el-dialog>
+
     <el-table :data="tableData" stripe border style="width: 100%">
       <el-table-column
         prop="time"
@@ -92,10 +112,14 @@
         date: '',
         time: '',
         week: '',
-        week2: '',
+        week2: '', //要导入的周
+        week3: '', //要清空的周
         tableData: [],
         dialogFormVisible: false,
+        dialogFormVisible2: false,
         listLoading: false,
+        return_code: 0,
+        return_msg: '',
         pickerOptions0: {
           disabledDate(time) {
             return time.getTime() < Date.now() - 8.64e7;
@@ -143,7 +167,7 @@
               vm.tableData.push(JSON.parse(xmlhttp.responseText).midnight)
             }
           }
-          xmlhttp.open("POST","http://116.62.66.130/canteen/getWeekMenu.php",false);
+          xmlhttp.open("POST","http://" + this.ip + "/canteen/getWeekMenu.php",false);
           xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
           xmlhttp.send(qs.stringify(param));
         }
@@ -183,7 +207,7 @@
           type: 'warning'
         }).then(() => {
           let param = qs.stringify({'MenuId': menu.MenuId,'EatingTime':eatingTime,"EatingDate":date})
-          this.loadXMLDoc('http://116.62.66.130/canteen/deleteOneMenu.php', param, '')
+          this.loadXMLDoc('http://' + this.ip + '/canteen/deleteOneMenu.php', param, '')
           this.$message({
             message: '删除成功',
             type: 'success'
@@ -199,10 +223,55 @@
           HistoryDate: util.formatDate.format(new Date(this.week), "yyyy-MM-dd"),
           FutureDate: util.formatDate.format(new Date(this.week2), "yyyy-MM-dd")
         })
-        this.loadXMLDoc('http://116.62.66.130/canteen/insertHistoryMenuToFuture.php', param, '')
-        if (this.listLoading == false) {
-          this.dialogFormVisible = false
-          this.week2 = ''
+        if (this.week2 !== '') {
+          this.loadXMLDoc('http://' + this.ip + '/canteen/insertHistoryMenuToFuture.php', param, '')
+          if (this.listLoading == false) {
+            this.$message({
+              message: '导入周菜单成功',
+              type: 'success'
+            });
+            this.dialogFormVisible = false
+            this.week2 = ''
+          } else {
+            if (this.return_msg == '请清空该周菜单菜单') {
+              this.$message({
+                message: '本周已有菜，如若导入请先清空',
+                type: 'warning'
+              });
+            }
+          }
+        } else {
+          this.$message({
+            message: '请选择要导入的周',
+            type: 'warning'
+          });
+        }
+      },
+      deleteWeek () {
+        this.listLoading = true
+        let param = qs.stringify({
+          Date: util.formatDate.format(new Date(this.week3), "yyyy-MM-dd")
+        })
+        if (this.week3 !== '') {
+          this.loadXMLDoc('http://' + this.ip + '/canteen/deleteWeekMenu.php', param, '')
+          if (this.listLoading == false) {
+            this.$message({
+              message: '清空周菜单成功',
+              type: 'success'
+            });
+            this.dialogFormVisible2 = false
+            this.week3 = ''
+          } else {
+            this.$message({
+              message: this.return_msg,
+              type: 'warning'
+            });
+          }
+        } else {
+          this.$message({
+            message: '请选择要清空的周',
+            type: 'warning'
+          });
         }
       },
       loadXMLDoc(url, param, data) {
@@ -213,19 +282,23 @@
         } else {// code for IE6, IE5
             xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
         }
-        xmlhttp.onreadystatechange=function()
-          {
+        xmlhttp.onreadystatechange=function(){
           if (xmlhttp.readyState==4 && xmlhttp.status==200)
             { 
-              if (data !== '') {
-                vm[data] = JSON.parse(xmlhttp.responseText).return_msg
+              let return_code = JSON.parse(xmlhttp.responseText).return_code
+              vm.return_code = return_code
+              if (return_code == 1) {
+                vm.listLoading = false;
+                if (data !== '') {
+                  vm[data] = JSON.parse(xmlhttp.responseText).return_msg
+                } else {//成功不需要赋值
+                  console.log(JSON.parse(xmlhttp.responseText).return_msg)
+                }
               } else {
-                console.log(JSON.parse(xmlhttp.responseText).return_msg)
+                vm.return_msg = JSON.parse(xmlhttp.responseText).return_msg
               }
-              this.listLoading = false;
-              console.log('xml', this.listLoading)
             }
-          }
+        }
         xmlhttp.open("POST",url,false);
         xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
         xmlhttp.send(param);

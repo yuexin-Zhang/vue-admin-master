@@ -7,6 +7,7 @@ function padding(s, len) {
 };
 
 export default {
+    ip : "47.96.184.230",
     getQueryStringByName: function (name) {
         var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
         var r = window.location.search.substr(1).match(reg);

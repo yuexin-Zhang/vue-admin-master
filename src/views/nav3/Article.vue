@@ -58,7 +58,7 @@
                     <el-upload
                       class="upload-demo"
                       ref="upload"
-                      action="http://116.62.66.130/canteen/addResource.php"
+                      :action="'http://' + this.ip + '/canteen/addResource.php'"
                       multiple
                       :on-preview="handlePreview"
                       :on-remove="handleRemove"
@@ -89,6 +89,7 @@
     export default {
         data() {
             return {
+                ip:util.ip,
                 filters: {
                     MenuName: ''
                 },
@@ -188,7 +189,7 @@
                     type: 'warning'
                 }).then(() => {
                     let param = qs.stringify({'ResourceId': index})
-                    this.loadXMLDoc('http://116.62.66.130/canteen/deleteOneResource.php', param, '')
+                    this.loadXMLDoc('http://' + this.ip + '/canteen/deleteOneResource.php', param, '')
                     // this.getArticleData()
                     this.getArticles(this.currentPage)
                     this.checkArticleTitle = ''
@@ -262,7 +263,7 @@
                         this.articleParams.Content = param.get('Content')
                         this.articleParams.Type = param.get('Type')
                         this.articleParams.EmployeeId = param.get('EmployeeId')
-                        this.loadXMLDoc('http://116.62.66.130/canteen/addResource.php', qs.stringify(this.articleParams), '')
+                        this.loadXMLDoc('http://' + this.ip + '/canteen/addResource.php', qs.stringify(this.articleParams), '')
                         this.addLoading = false;
                         this.$message({
                             message: '添加成功',
@@ -291,7 +292,7 @@
              },
             getArticleData () {
                 this.articleData = []
-                this.loadXMLDoc('http://116.62.66.130/canteen/showAllResource.php', qs.stringify({}), 'originData')
+                this.loadXMLDoc('http://' + this.ip + '/canteen/showAllResource.php', qs.stringify({}), 'originData')
                 for (let [index,val] of this.originData.entries()){
                     val.index = index + 1
                     this.articleData.push(val)
