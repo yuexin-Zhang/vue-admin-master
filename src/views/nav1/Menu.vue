@@ -109,6 +109,7 @@
   export default {
     data () {
       return {
+        ip: util.ip,
         date: '',
         time: '',
         week: '',
@@ -167,7 +168,7 @@
               vm.tableData.push(JSON.parse(xmlhttp.responseText).midnight)
             }
           }
-          xmlhttp.open("POST","http://" + this.ip + "/canteen/getWeekMenu.php",false);
+          xmlhttp.open("POST","http://" + vm.ip + "/canteen/getWeekMenu.php",false);
           xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
           xmlhttp.send(qs.stringify(param));
         }
@@ -207,7 +208,7 @@
           type: 'warning'
         }).then(() => {
           let param = qs.stringify({'MenuId': menu.MenuId,'EatingTime':eatingTime,"EatingDate":date})
-          this.loadXMLDoc('http://' + this.ip + '/canteen/deleteOneMenu.php', param, '')
+          this.loadXMLDoc('http://' + vm.ip + '/canteen/deleteOneMenu.php', param, '')
           this.$message({
             message: '删除成功',
             type: 'success'
@@ -218,13 +219,14 @@
         });
       },
       addWeek () {
+        let vm = this
         this.listLoading = true
         let param = qs.stringify({
           HistoryDate: util.formatDate.format(new Date(this.week), "yyyy-MM-dd"),
           FutureDate: util.formatDate.format(new Date(this.week2), "yyyy-MM-dd")
         })
         if (this.week2 !== '') {
-          this.loadXMLDoc('http://' + this.ip + '/canteen/insertHistoryMenuToFuture.php', param, '')
+          this.loadXMLDoc('http://' + vm.ip + '/canteen/insertHistoryMenuToFuture.php', param, '')
           if (this.listLoading == false) {
             this.$message({
               message: '导入周菜单成功',
@@ -248,12 +250,13 @@
         }
       },
       deleteWeek () {
+        let vm = this
         this.listLoading = true
         let param = qs.stringify({
           Date: util.formatDate.format(new Date(this.week3), "yyyy-MM-dd")
         })
         if (this.week3 !== '') {
-          this.loadXMLDoc('http://' + this.ip + '/canteen/deleteWeekMenu.php', param, '')
+          this.loadXMLDoc('http://' + vm.ip + '/canteen/deleteWeekMenu.php', param, '')
           if (this.listLoading == false) {
             this.$message({
               message: '清空周菜单成功',

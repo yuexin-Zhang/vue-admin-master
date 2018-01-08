@@ -19,7 +19,7 @@
           show-icon>
         </el-alert>
     </div>
-    <el-tag v-if="hasSelectedUser">{{selectedUser.EmployeeName}}2017年就餐汇总</el-tag>
+    <el-tag v-if="hasSelectedUser">【{{selectedUser.EmployeeName}}】{{year}}年就餐汇总</el-tag>
     <a class="export-btn" type="info" @click="exportToExcel">导出成excel</a>
     <!--列表-->
     <el-table :data="userMealData" highlight-current-row v-loading="listLoading" style="width: 100%;" id="userMealTable">
@@ -58,7 +58,8 @@
         total: 0,
         page: 1,
         selectedUser:{},
-        hasSelectedUser: true
+        hasSelectedUser: true,
+        year: ''
       }
     },
     methods: {
@@ -86,8 +87,9 @@
 
       //获取用户列表
       getUserMealData(user) {
+        console.log(user)
         this.selectedUser = user
-        let param = {'EmployeeId':user.EmployeeId}
+        let param = {'EmployeeId':user.EmployeeId, 'Type':user.Type}
         this.loadXMLDoc('http://' + this.ip + '/canteen/reportForOne.php',qs.stringify(param), 'userMealData')
       },
       checkUserMealData(checkUserName) {
@@ -123,6 +125,7 @@
       }
     },
     created() {
+      this.year = new Date().getFullYear()
       this.currYear = new Date().getFullYear()
       this.loadXMLDoc('http://' + this.ip + '/canteen/queryAllEmployee.php', '', 'allUserData')
       this.userData = this.allUserData
